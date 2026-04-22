@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import TabDashboard from './components/TabDashboard'
 import TabVendedores from './components/TabVendedores'
+import TabRanking from './components/TabRanking'
 
 function App() {
   const [aba, setAba] = useState('dashboard')
@@ -13,7 +14,6 @@ function App() {
           Controle de desempenho da equipe
         </p>
 
-        {/* MENU */}
         <div className="tabs">
           <button
             className={`tab-btn ${aba === 'dashboard' ? 'active' : ''}`}
@@ -28,11 +28,18 @@ function App() {
           >
             👥 Vendedores
           </button>
+
+          <button
+            className={`tab-btn ${aba === 'ranking' ? 'active' : ''}`}
+            onClick={() => setAba('ranking')}
+          >
+            🏆 Ranking
+          </button>
         </div>
 
-        {/* CONTEÚDO */}
         {aba === 'dashboard' && <TabDashboard />}
         {aba === 'vendedores' && <TabVendedores />}
+        {aba === 'ranking' && <TabRanking />}
       </div>
     </div>
   )
