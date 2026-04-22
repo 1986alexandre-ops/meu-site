@@ -54,10 +54,16 @@ export default function TabRanking() {
         0
       )
 
+      const percentualMeta =
+        Number(v.meta_diaria || 0) > 0
+          ? (totalVendido / Number(v.meta_diaria)) * 100
+          : 0
+
       return {
         ...v,
         totalVendido,
         totalAtendimentos,
+        percentualMeta,
       }
     })
 
@@ -78,10 +84,16 @@ export default function TabRanking() {
         0
       )
 
+      const percentualMeta =
+        Number(v.meta_mensal || 0) > 0
+          ? (totalVendido / Number(v.meta_mensal)) * 100
+          : 0
+
       return {
         ...v,
         totalVendido,
         totalAtendimentos,
+        percentualMeta,
       }
     })
 
@@ -113,7 +125,14 @@ export default function TabRanking() {
     })
   }
 
-  function renderLista(titulo, lista, campo, tipo = 'money') {
+  function getCorPercentual(valor) {
+    if (valor >= 100) return '#166534'
+    if (valor >= 80) return '#a16207'
+    if (valor >= 50) return '#b45309'
+    return '#991b1b'
+  }
+
+  function renderLista(titulo, lista, campo, tipo = 'money', mostrarPercentual = false) {
     return (
       <div className="info-box" style={{ display: 'grid', gap: 12 }}>
         <h3 style={{ margin: 0 }}>{titulo}</h3>
@@ -130,8 +149,23 @@ export default function TabRanking() {
               borderBottom: '1px solid #e5e7eb',
             }}
           >
-            <div style={{ fontWeight: 700 }}>
-              {index + 1}º - {v.nome}
+            <div>
+              <div style={{ fontWeight: 700 }}>
+                {index + 1}º - {v.nome}
+              </div>
+
+              {mostrarPercentual && (
+                <div
+                  style={{
+                    color: getCorPercentual(v.percentualMeta),
+                    fontSize: 14,
+                    fontWeight: 700,
+                    marginTop: 4,
+                  }}
+                >
+                  {v.percentualMeta.toFixed(1)}% da meta
+                </div>
+              )}
             </div>
 
             <div style={{ color: '#374151', fontWeight: 600 }}>
@@ -189,14 +223,29 @@ export default function TabRanking() {
       )}
 
       <div style={{ display: 'grid', gap: 16 }}>
-        {renderLista('🏆 Ranking de vendas do dia', rankingDia, 'totalVendido')}
-        {renderLista('📅 Ranking de vendas do mês', rankingMes, 'totalVendido')}
+        {renderLista(
+          '🏆 Ranking de vendas do dia',
+          rankingDia,
+          'totalVendido',
+          'money',
+          true
+        )}
+
+        {renderLista(
+          '📅 Ranking de vendas do mês',
+          rankingMes,
+          'totalVendido',
+          'money',
+          true
+        )}
+
         {renderLista(
           '📞 Ranking de atendimentos do dia',
           rankingAtendDia,
           'totalAtendimentos',
           'number'
         )}
+
         {renderLista(
           '🗓️ Ranking de atendimentos do mês',
           rankingAtendMes,
