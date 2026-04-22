@@ -40,8 +40,7 @@ function App() {
       }
 
       setVendedores(data || [])
-      setMsg('Dashboard conectado 
-             ao Supabase ✅')
+      setMsg('Dashboard conectado ao Supabase ✅')
     }
 
     carregar()
@@ -64,8 +63,7 @@ function App() {
 
       <ul>
         {vendedores.map((v) => (
-          <li key={v.id}>{v.nome}
-</li>       
+          <li key={v.id}>{v.nome}</li> 
     ))}
       </ul>
     </div>
