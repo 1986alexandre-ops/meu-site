@@ -98,4 +98,31 @@ export default function TabRanking() {
             className="info-box"
             style={{
               display: 'flex',
-              justifyContent: 'space-between
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>
+                {index + 1}º - {v.nome}
+              </div>
+
+              <div style={{ fontSize: 14, color: '#6b7280', marginTop: 6 }}>
+                Total vendido: {formatMoney(v.totalVendido)}
+              </div>
+
+              <div style={{ fontSize: 14, color: '#6b7280' }}>
+                Atendimentos: {v.totalAtendimentos}
+              </div>
+
+              <div style={{ fontSize: 14, color: '#6b7280' }}>
+                Ticket médio: {formatMoney(v.ticketMedio)}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+            }
