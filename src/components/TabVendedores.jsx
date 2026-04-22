@@ -14,6 +14,7 @@ export default function TabVendedores() {
     const { data } = await supabase
       .from('vendedores')
       .select('*')
+      .order('nome', { ascending: true })
 
     setVendedores(data || [])
   }
@@ -44,23 +45,69 @@ export default function TabVendedores() {
 
   return (
     <div>
-      <h2>Vendedores</h2>
+      <h2 className="section-title">Vendedores</h2>
 
-      <input
-        placeholder="Nome"
-        value={novoNome}
-        onChange={(e) => setNovoNome(e.target.value)}
-      />
-      <button onClick={adicionar}>Adicionar</button>
+      <div
+        className="info-box"
+        style={{ marginBottom: 20, display: 'flex', gap: 10, flexWrap: 'wrap' }}
+      >
+        <input
+          placeholder="Nome do vendedor"
+          value={novoNome}
+          onChange={(e) => setNovoNome(e.target.value)}
+          style={{
+            flex: 1,
+            minWidth: 180,
+            padding: 12,
+            borderRadius: 10,
+            border: '1px solid #d1d5db',
+          }}
+        />
+        <button
+          onClick={adicionar}
+          className="tab-btn active"
+        >
+          Adicionar
+        </button>
+      </div>
 
-      <ul>
+      <div style={{ display: 'grid', gap: 12 }}>
         {vendedores.map((v) => (
-          <li key={v.id}>
-            {v.nome}
-            <button onClick={() => remover(v.id)}>❌</button>
-          </li>
+          <div
+            key={v.id}
+            className="info-box"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>
+                {v.nome}
+              </div>
+              <div style={{ fontSize: 14, color: '#6b7280' }}>
+                Vendedor cadastrado no sistema
+              </div>
+            </div>
+
+            <button
+              onClick={() => remover(v.id)}
+              style={{
+                border: 'none',
+                background: '#fee2e2',
+                color: '#991b1b',
+                padding: '10px 14px',
+                borderRadius: 10,
+                fontWeight: 700,
+              }}
+            >
+              Excluir
+            </button>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   )
 }
