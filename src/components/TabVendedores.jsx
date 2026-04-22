@@ -13,6 +13,9 @@ export default function TabVendedores() {
   const [metaDiaria, setMetaDiaria] = useState('')
   const [erro, setErro] = useState('')
 
+  const [vendaDia, setVendaDia] = useState({})
+  const [atendDia, setAtendDia] = useState({})
+
   async function carregar() {
     setErro('')
 
@@ -73,6 +76,35 @@ export default function TabVendedores() {
     }
 
     carregar()
+  }
+
+  async function registrarDia(vendedorId) {
+    setErro('')
+
+    const valor = vendaDia[vendedorId] ? Number(vendaDia[vendedorId]) : 0
+    const atendimentos = atendDia[vendedorId] ? Number(atendDia[vendedorId]) : 0
+
+    const hoje = new Date().toISOString().slice(0, 10)
+
+    const { error } = await supabase
+      .from('vendas')
+      .insert([
+        {
+          vendedor_id: vendedorId,
+          data: hoje,
+          valor,
+          atendimentos,
+        },
+      ])
+
+    if (error) {
+      setErro(error.message)
+      return
+    }
+
+    setVendaDia((prev) => ({ ...prev, [vendedorId]: '' }))
+    setAtendDia((prev) => ({ ...prev, [vendedorId]: '' }))
+    alert('Venda do dia registrada com sucesso')
   }
 
   function formatMoney(valor) {
@@ -162,39 +194,95 @@ export default function TabVendedores() {
             key={v.id}
             className="info-box"
             style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              display: 'grid',
               gap: 12,
             }}
           >
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>
-                {v.nome}
-              </div>
-
-              <div style={{ fontSize: 14, color: '#6b7280', marginTop: 6 }}>
-                Meta mensal: {formatMoney(v.meta_mensal)}
-              </div>
-
-              <div style={{ fontSize: 14, color: '#6b7280' }}>
-                Meta diária: {formatMoney(v.meta_diaria)}
-              </div>
-            </div>
-
-            <button
-              onClick={() => remover(v.id)}
+            <div
               style={{
-                border: 'none',
-                background: '#fee2e2',
-                color: '#991b1b',
-                padding: '10px 14px',
-                borderRadius: 10,
-                fontWeight: 700,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 12,
               }}
             >
-              Excluir
-            </button>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 700 }}>
+                  {v.nome}
+                </div>
+
+                <div style={{ fontSize: 14, color: '#6b7280', marginTop: 6 }}>
+                  Meta mensal: {formatMoney(v.meta_mensal)}
+                </div>
+
+                <div style={{ fontSize: 14, color: '#6b7280' }}>
+                  Meta diária: {formatMoney(v.meta_diaria)}
+                </div>
+              </div>
+
+              <button
+                onClick={() => remover(v.id)}
+                style={{
+                  border: 'none',
+                  background: '#fee2e2',
+                  color: '#991b1b',
+                  padding: '10px 14px',
+                  borderRadius: 10,
+                  fontWeight: 700,
+                }}
+              >
+                Excluir
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gap: 10,
+                gridTemplateColumns: '1fr 1fr auto',
+              }}
+            >
+              <input
+                type="number"
+                placeholder="Venda do dia"
+                value={vendaDia[v.id] || ''}
+                onChange={(e) =>
+                  setVendaDia((prev) => ({
+                    ...prev,
+                    [v.id]: e.target.value,
+                  }))
+                }
+                style={{
+                  padding: 12,
+                  borderRadius: 10,
+                  border: '1px solid #d1d5db',
+                }}
+              />
+
+              <input
+                type="number"
+                placeholder="Atendimentos"
+                value={atendDia[v.id] || ''}
+                onChange={(e) =>
+                  setAtendDia((prev) => ({
+                    ...prev,
+                    [v.id]: e.target.value,
+                  }))
+                }
+                style={{
+                  padding: 12,
+                  borderRadius: 10,
+                  border: '1px solid #d1d5db',
+                }}
+              />
+
+              <button
+                onClick={() => registrarDia(v.id)}
+                className="tab-btn active"
+              >
+                Registrar dia
+              </button>
+            </div>
           </div>
         ))}
       </div>
