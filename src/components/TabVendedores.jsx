@@ -8,18 +8,11 @@ const supabase = createClient(
 
 export default function TabVendedores() {
   const [vendedores, setVendedores] = useState([])
+  const [vendas, setVendas] = useState([])
   const [novoNome, setNovoNome] = useState('')
   const [metaMensal, setMetaMensal] = useState('')
   const [metaDiaria, setMetaDiaria] = useState('')
   const [erro, setErro] = useState('')
-
-  const [dataLancamento, setDataLancamento] = useState(
-    new Date().toISOString().slice(0, 10)
-  )
-
-  const [vendaDia, setVendaDia] = useState({})
-  const [atendDia, setAtendDia] = useState({})
-  const [resumos, setResumos] = useState({})
 
   async function carregar() {
     setErro('')
@@ -37,44 +30,9 @@ export default function TabVendedores() {
     setVendedores(data || [])
   }
 
-  async function carregarResumos() {
-    setErro('')
-
-    const { data, error } = await supabase
-      .from('vendas')
-      .select('*')
-      .eq('data', dataLancamento)
-
-    if (error) {
-      setErro(error.message)
-      return
-    }
-
-    const mapa = {}
-
-    ;(data || []).forEach((item) => {
-      const id = item.vendedor_id
-      if (!mapa[id]) {
-        mapa[id] = {
-          valor: 0,
-          atendimentos: 0,
-        }
-      }
-
-      mapa[id].valor += Number(item.valor || 0)
-      mapa[id].atendimentos += Number(item.atendimentos || 0)
-    })
-
-    setResumos(mapa)
-  }
-
   useEffect(() => {
     carregar()
   }, [])
-
-  useEffect(() => {
-    carregarResumos()
-  }, [dataLancamento])
 
   async function adicionar() {
     if (!novoNome.trim()) return
@@ -116,35 +74,6 @@ export default function TabVendedores() {
     }
 
     carregar()
-    carregarResumos()
-  }
-
-  async function registrarDia(vendedorId) {
-    setErro('')
-
-    const valor = vendaDia[vendedorId] ? Number(vendaDia[vendedorId]) : 0
-    const atendimentos = atendDia[vendedorId] ? Number(atendDia[vendedorId]) : 0
-
-    const { error } = await supabase
-      .from('vendas')
-      .insert([
-        {
-          vendedor_id: vendedorId,
-          data: dataLancamento,
-          valor,
-          atendimentos,
-        },
-      ])
-
-    if (error) {
-      setErro(error.message)
-      return
-    }
-
-    setVendaDia((prev) => ({ ...prev, [vendedorId]: '' }))
-    setAtendDia((prev) => ({ ...prev, [vendedorId]: '' }))
-    await carregarResumos()
-    alert('Venda do dia registrada com sucesso')
   }
 
   function formatMoney(valor) {
@@ -156,23 +85,6 @@ export default function TabVendedores() {
       style: 'currency',
       currency: 'BRL',
     })
-  }
-
-  function getResumo(vendedorId) {
-    return resumos[vendedorId] || { valor: 0, atendimentos: 0 }
-  }
-
-  function getTicketMedio(vendedorId) {
-    const resumo = getResumo(vendedorId)
-    if (!resumo.atendimentos) return 0
-    return resumo.valor / resumo.atendimentos
-  }
-
-  function getPercentualMeta(vendedor) {
-    const resumo = getResumo(vendedor.id)
-    const meta = Number(vendedor.meta_diaria || 0)
-    if (!meta) return 0
-    return (resumo.valor / meta) * 100
   }
 
   return (
@@ -230,30 +142,6 @@ export default function TabVendedores() {
         </button>
       </div>
 
-      <div
-        className="info-box"
-        style={{
-          marginBottom: 20,
-          display: 'grid',
-          gap: 10,
-        }}
-      >
-        <div style={{ fontWeight: 700 }}>
-          Data dos lançamentos
-        </div>
-
-        <input
-          type="date"
-          value={dataLancamento}
-          onChange={(e) => setDataLancamento(e.target.value)}
-          style={{
-            padding: 12,
-            borderRadius: 10,
-            border: '1px solid #d1d5db',
-          }}
-        />
-      </div>
-
       {erro && (
         <div
           style={{
@@ -270,124 +158,47 @@ export default function TabVendedores() {
       )}
 
       <div style={{ display: 'grid', gap: 12 }}>
-        {vendedores.map((v) => {
-          const resumo = getResumo(v.id)
-          const ticket = getTicketMedio(v.id)
-          const percentual = getPercentualMeta(v)
-
-          return (
-            <div
-              key={v.id}
-              className="info-box"
-              style={{
-                display: 'grid',
-                gap: 12,
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: 18, fontWeight: 700 }}>
-                    {v.nome}
-                  </div>
-
-                  <div style={{ fontSize: 14, color: '#6b7280', marginTop: 6 }}>
-                    Meta mensal: {formatMoney(v.meta_mensal)}
-                  </div>
-
-                  <div style={{ fontSize: 14, color: '#6b7280' }}>
-                    Meta diária: {formatMoney(v.meta_diaria)}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => remover(v.id)}
-                  style={{
-                    border: 'none',
-                    background: '#fee2e2',
-                    color: '#991b1b',
-                    padding: '10px 14px',
-                    borderRadius: 10,
-                    fontWeight: 700,
-                  }}
-                >
-                  Excluir
-                </button>
+        {vendedores.map((v) => (
+          <div
+            key={v.id}
+            className="info-box"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>
+                {v.nome}
               </div>
 
-              <div
-                style={{
-                  display: 'grid',
-                  gap: 8,
-                  background: '#f9fafb',
-                  padding: 12,
-                  borderRadius: 10,
-                }}
-              >
-                <div>Vendido na data: {formatMoney(resumo.valor)}</div>
-                <div>Atendimentos na data: {resumo.atendimentos}</div>
-                <div>Ticket médio: {formatMoney(ticket)}</div>
-                <div>% da meta diária: {percentual.toFixed(1)}%</div>
+              <div style={{ fontSize: 14, color: '#6b7280', marginTop: 6 }}>
+                Meta mensal: {formatMoney(v.meta_mensal)}
               </div>
 
-              <div
-                style={{
-                  display: 'grid',
-                  gap: 10,
-                  gridTemplateColumns: '1fr 1fr auto',
-                }}
-              >
-                <input
-                  type="number"
-                  placeholder="Venda do dia"
-                  value={vendaDia[v.id] || ''}
-                  onChange={(e) =>
-                    setVendaDia((prev) => ({
-                      ...prev,
-                      [v.id]: e.target.value,
-                    }))
-                  }
-                  style={{
-                    padding: 12,
-                    borderRadius: 10,
-                    border: '1px solid #d1d5db',
-                  }}
-                />
-
-                <input
-                  type="number"
-                  placeholder="Atendimentos"
-                  value={atendDia[v.id] || ''}
-                  onChange={(e) =>
-                    setAtendDia((prev) => ({
-                      ...prev,
-                      [v.id]: e.target.value,
-                    }))
-                  }
-                  style={{
-                    padding: 12,
-                    borderRadius: 10,
-                    border: '1px solid #d1d5db',
-                  }}
-                />
-
-                <button
-                  onClick={() => registrarDia(v.id)}
-                  className="tab-btn active"
-                >
-                  Registrar dia
-                </button>
+              <div style={{ fontSize: 14, color: '#6b7280' }}>
+                Meta diária: {formatMoney(v.meta_diaria)}
               </div>
             </div>
-          )
-        })}
+
+            <button
+              onClick={() => remover(v.id)}
+              style={{
+                border: 'none',
+                background: '#fee2e2',
+                color: '#991b1b',
+                padding: '10px 14px',
+                borderRadius: 10,
+                fontWeight: 700,
+              }}
+            >
+              Excluir
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   )
-      }
+}
