@@ -21,7 +21,7 @@ function App() {
     useState('')
   const [vendedores, 
          setVendedores] = useState([])
-
+const [novoNome, setNovoNome] = useState('')
   useEffect(() => {
     async function carregar() {
       if (!supabase) {
@@ -45,7 +45,21 @@ function App() {
 
     carregar()
   }, [])
+async function adicionar() {
+  if (!novoNome.trim()) return
 
+  const { error } = await supabase
+    .from('vendedores')
+    .insert([{ nome: novoNome }])
+
+  if (error) {
+    setErro(error.message)
+    return
+  }
+
+  setNovoNome('')
+carregar()
+}
   return (
     <div style={{ padding: 20, 
                  fontFamily: 'Arial' }}>
@@ -57,7 +71,14 @@ function App() {
           Erro: {erro}
         </p>
       )}
-
+<div style={{ marginBottom: 20 }}>
+  <input
+    placeholder="Nome do vendedor"
+    value={novoNome}
+    onChange={(e) => setNovoNome(e.target.value)}
+  />
+  <button onClick={adicionar}>Adicionar</button>
+</div>
       <p>Total de vendedores: 
         {vendedores.length}</p>
 
