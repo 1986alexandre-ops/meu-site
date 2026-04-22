@@ -18,6 +18,9 @@ export default function TabVendedores() {
   )
   const [vendaDia, setVendaDia] = useState({})
   const [atendDia, setAtendDia] = useState({})
+  const [descontoDia, setDescontoDia] = useState({})
+  const [freteDia, setFreteDia] = useState({})
+  const [margemDia, setMargemDia] = useState({})
 
   async function carregar() {
     setErro('')
@@ -102,6 +105,9 @@ export default function TabVendedores() {
 
     const valor = vendaDia[vendedorId] ? Number(vendaDia[vendedorId]) : 0
     const atendimentos = atendDia[vendedorId] ? Number(atendDia[vendedorId]) : 0
+    const desconto = descontoDia[vendedorId] ? Number(descontoDia[vendedorId]) : 0
+    const frete = freteDia[vendedorId] ? Number(freteDia[vendedorId]) : 0
+    const margem = margemDia[vendedorId] ? Number(margemDia[vendedorId]) : 0
 
     const { error } = await supabase
       .from('vendas')
@@ -111,6 +117,9 @@ export default function TabVendedores() {
           data: dataLancamento,
           valor,
           atendimentos,
+          desconto,
+          frete,
+          margem,
         },
       ])
 
@@ -121,6 +130,9 @@ export default function TabVendedores() {
 
     setVendaDia((prev) => ({ ...prev, [vendedorId]: '' }))
     setAtendDia((prev) => ({ ...prev, [vendedorId]: '' }))
+    setDescontoDia((prev) => ({ ...prev, [vendedorId]: '' }))
+    setFreteDia((prev) => ({ ...prev, [vendedorId]: '' }))
+    setMargemDia((prev) => ({ ...prev, [vendedorId]: '' }))
     await carregarVendas()
     alert('Venda do dia registrada com sucesso')
   }
@@ -325,7 +337,7 @@ export default function TabVendedores() {
                 style={{
                   display: 'grid',
                   gap: 10,
-                  gridTemplateColumns: '1fr 1fr auto',
+                  gridTemplateColumns: '1fr 1fr',
                 }}
               >
                 <input
@@ -362,10 +374,58 @@ export default function TabVendedores() {
                   }}
                 />
 
-                <button
-                  onClick={() => registrarDia(v.id)}
-                  className="tab-btn active"
-                >
+                <input
+                  type="number"
+                  placeholder="Desconto"
+                  value={descontoDia[v.id] || ''}
+                  onChange={(e) =>
+                    setDescontoDia((prev) => ({
+                      ...prev,
+                      [v.id]: e.target.value,
+                    }))
+                  }
+                  style={{
+                    padding: 12,
+                    borderRadius: 10,
+                    border: '1px solid #d1d5db',
+                  }}
+                />
+
+                <input
+                  type="number"
+                  placeholder="Frete"
+                  value={freteDia[v.id] || ''}
+                  onChange={(e) =>
+                    setFreteDia((prev) => ({
+                      ...prev,
+                      [v.id]: e.target.value,
+                    }))
+                  }
+                  style={{
+                    padding: 12,
+                    borderRadius: 10,
+                    border: '1px solid #d1d5db',
+                  }}
+                />
+
+                <input
+                  type="number"
+                  placeholder="Margem"
+                  value={margemDia[v.id] || ''}
+                  onChange={(e) =>
+                    setMargemDia((prev) => ({
+                      ...prev,
+                      [v.id]: e.target.value,
+                    }))
+                  }
+                  style={{
+                    padding: 12,
+                    borderRadius: 10,
+                    border: '1px solid #d1d5db',
+                  }}
+                />
+
+                <button onClick={() => registrarDia(v.id)} className="tab-btn active">
                   Registrar dia
                 </button>
               </div>
