@@ -9,12 +9,20 @@ const supabase = createClient(
 export default function TabVendedores() {
   const [vendedores, setVendedores] = useState([])
   const [novoNome, setNovoNome] = useState('')
+  const [erro, setErro] = useState('')
 
   async function carregar() {
-    const { data } = await supabase
+    setErro('')
+
+    const { data, error } = await supabase
       .from('vendedores')
       .select('*')
       .order('nome', { ascending: true })
+
+    if (error) {
+      setErro(error.message)
+      return
+    }
 
     setVendedores(data || [])
   }
@@ -26,19 +34,33 @@ export default function TabVendedores() {
   async function adicionar() {
     if (!novoNome.trim()) return
 
-    await supabase
+    setErro('')
+
+    const { error } = await supabase
       .from('vendedores')
-      .insert([{ nome: novoNome }])
+      .insert([{ nome: novoNome.trim() }])
+
+    if (error) {
+      setErro(error.message)
+      return
+    }
 
     setNovoNome('')
     carregar()
   }
 
   async function remover(id) {
-    await supabase
+    setErro('')
+
+    const { error } = await supabase
       .from('vendedores')
       .delete()
       .eq('id', id)
+
+    if (error) {
+      setErro(error.message)
+      return
+    }
 
     carregar()
   }
@@ -70,6 +92,21 @@ export default function TabVendedores() {
           Adicionar
         </button>
       </div>
+
+      {erro && (
+        <div
+          style={{
+            marginBottom: 16,
+            background: '#fee2e2',
+            color: '#991b1b',
+            padding: 12,
+            borderRadius: 10,
+            fontWeight: 600,
+          }}
+        >
+          Erro: {erro}
+        </div>
+      )}
 
       <div style={{ display: 'grid', gap: 12 }}>
         {vendedores.map((v) => (
