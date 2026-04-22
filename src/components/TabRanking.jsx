@@ -7,8 +7,14 @@ const supabase = createClient(
 )
 
 export default function TabRanking() {
-  const [ranking, setRanking] = useState([])
+  const [rankingDia, setRankingDia] = useState([])
+  const [rankingMes, setRankingMes] = useState([])
+  const [rankingAtendDia, setRankingAtendDia] = useState([])
+  const [rankingAtendMes, setRankingAtendMes] = useState([])
   const [erro, setErro] = useState('')
+  const [dataSelecionada, setDataSelecionada] = useState(
+    new Date().toISOString().slice(0, 10)
+  )
 
   async function carregarRanking() {
     setErro('')
@@ -31,9 +37,11 @@ export default function TabRanking() {
       return
     }
 
-    const lista = (vendedores || []).map((v) => {
+    const mesRef = dataSelecionada.slice(0, 7)
+
+    const listaDia = (vendedores || []).map((v) => {
       const vendasDoVendedor = (vendas || []).filter(
-        (item) => item.vendedor_id === v.id
+        (item) => item.vendedor_id === v.id && item.data === dataSelecionada
       )
 
       const totalVendido = vendasDoVendedor.reduce(
@@ -46,24 +54,57 @@ export default function TabRanking() {
         0
       )
 
-      const ticketMedio =
-        totalAtendimentos > 0 ? totalVendido / totalAtendimentos : 0
+      return {
+        ...v,
+        totalVendido,
+        totalAtendimentos,
+      }
+    })
+
+    const listaMes = (vendedores || []).map((v) => {
+      const vendasDoVendedor = (vendas || []).filter(
+        (item) =>
+          item.vendedor_id === v.id &&
+          String(item.data || '').slice(0, 7) === mesRef
+      )
+
+      const totalVendido = vendasDoVendedor.reduce(
+        (soma, item) => soma + Number(item.valor || 0),
+        0
+      )
+
+      const totalAtendimentos = vendasDoVendedor.reduce(
+        (soma, item) => soma + Number(item.atendimentos || 0),
+        0
+      )
 
       return {
         ...v,
         totalVendido,
         totalAtendimentos,
-        ticketMedio,
       }
     })
 
-    lista.sort((a, b) => b.totalVendido - a.totalVendido)
-    setRanking(lista)
+    setRankingDia(
+      [...listaDia].sort((a, b) => b.totalVendido - a.totalVendido)
+    )
+
+    setRankingMes(
+      [...listaMes].sort((a, b) => b.totalVendido - a.totalVendido)
+    )
+
+    setRankingAtendDia(
+      [...listaDia].sort((a, b) => b.totalAtendimentos - a.totalAtendimentos)
+    )
+
+    setRankingAtendMes(
+      [...listaMes].sort((a, b) => b.totalAtendimentos - a.totalAtendimentos)
+    )
   }
 
   useEffect(() => {
     carregarRanking()
-  }, [])
+  }, [dataSelecionada])
 
   function formatMoney(valor) {
     return Number(valor || 0).toLocaleString('pt-BR', {
@@ -72,9 +113,65 @@ export default function TabRanking() {
     })
   }
 
+  function renderLista(titulo, lista, campo, tipo = 'money') {
+    return (
+      <div className="info-box" style={{ display: 'grid', gap: 12 }}>
+        <h3 style={{ margin: 0 }}>{titulo}</h3>
+
+        {lista.map((v, index) => (
+          <div
+            key={`${titulo}-${v.id}`}
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 12,
+              padding: '10px 0',
+              borderBottom: '1px solid #e5e7eb',
+            }}
+          >
+            <div style={{ fontWeight: 700 }}>
+              {index + 1}º - {v.nome}
+            </div>
+
+            <div style={{ color: '#374151', fontWeight: 600 }}>
+              {tipo === 'money'
+                ? formatMoney(v[campo])
+                : Number(v[campo] || 0)}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div>
       <h2 className="section-title">Ranking</h2>
+
+      <div
+        className="info-box"
+        style={{
+          marginBottom: 20,
+          display: 'grid',
+          gap: 10,
+        }}
+      >
+        <div style={{ fontWeight: 700 }}>
+          Data de referência do ranking
+        </div>
+
+        <input
+          type="date"
+          value={dataSelecionada}
+          onChange={(e) => setDataSelecionada(e.target.value)}
+          style={{
+            padding: 12,
+            borderRadius: 10,
+            border: '1px solid #d1d5db',
+          }}
+        />
+      </div>
 
       {erro && (
         <div
@@ -91,38 +188,22 @@ export default function TabRanking() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gap: 12 }}>
-        {ranking.map((v, index) => (
-          <div
-            key={v.id}
-            className="info-box"
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: 12,
-            }}
-          >
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>
-                {index + 1}º - {v.nome}
-              </div>
-
-              <div style={{ fontSize: 14, color: '#6b7280', marginTop: 6 }}>
-                Total vendido: {formatMoney(v.totalVendido)}
-              </div>
-
-              <div style={{ fontSize: 14, color: '#6b7280' }}>
-                Atendimentos: {v.totalAtendimentos}
-              </div>
-
-              <div style={{ fontSize: 14, color: '#6b7280' }}>
-                Ticket médio: {formatMoney(v.ticketMedio)}
-              </div>
-            </div>
-          </div>
-        ))}
+      <div style={{ display: 'grid', gap: 16 }}>
+        {renderLista('🏆 Ranking de vendas do dia', rankingDia, 'totalVendido')}
+        {renderLista('📅 Ranking de vendas do mês', rankingMes, 'totalVendido')}
+        {renderLista(
+          '📞 Ranking de atendimentos do dia',
+          rankingAtendDia,
+          'totalAtendimentos',
+          'number'
+        )}
+        {renderLista(
+          '🗓️ Ranking de atendimentos do mês',
+          rankingAtendMes,
+          'totalAtendimentos',
+          'number'
+        )}
       </div>
     </div>
   )
-            }
+}
