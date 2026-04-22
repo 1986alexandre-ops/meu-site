@@ -6,23 +6,34 @@ function App() {
   const [aba, setAba] = useState('dashboard')
 
   return (
-    <div style={{ padding: 20, fontFamily: 'Arial' }}>
-      <h1>Meu Sistema</h1>
+    <div className="app-shell">
+      <div className="app-card">
+        <h1 className="app-title">Radar Comercial</h1>
+        <p className="app-subtitle">
+          Controle de desempenho da equipe
+        </p>
 
-      {/* MENU */}
-      <div style={{ marginBottom: 20 }}>
-        <button onClick={() => setAba('dashboard')}>
-          Dashboard
-        </button>
+        {/* MENU */}
+        <div className="tabs">
+          <button
+            className={`tab-btn ${aba === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setAba('dashboard')}
+          >
+            📊 Dashboard
+          </button>
 
-        <button onClick={() => setAba('vendedores')}>
-          Vendedores
-        </button>
+          <button
+            className={`tab-btn ${aba === 'vendedores' ? 'active' : ''}`}
+            onClick={() => setAba('vendedores')}
+          >
+            👥 Vendedores
+          </button>
+        </div>
+
+        {/* CONTEÚDO */}
+        {aba === 'dashboard' && <TabDashboard />}
+        {aba === 'vendedores' && <TabVendedores />}
       </div>
-
-      {/* CONTEÚDO */}
-      {aba === 'dashboard' && <TabDashboard />}
-      {aba === 'vendedores' && <TabVendedores />}
     </div>
   )
 }
