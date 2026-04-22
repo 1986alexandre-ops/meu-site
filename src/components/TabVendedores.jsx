@@ -13,6 +13,10 @@ export default function TabVendedores() {
   const [metaDiaria, setMetaDiaria] = useState('')
   const [erro, setErro] = useState('')
 
+  const [dataLancamento, setDataLancamento] = useState(
+    new Date().toISOString().slice(0, 10)
+  )
+
   const [vendaDia, setVendaDia] = useState({})
   const [atendDia, setAtendDia] = useState({})
 
@@ -84,14 +88,12 @@ export default function TabVendedores() {
     const valor = vendaDia[vendedorId] ? Number(vendaDia[vendedorId]) : 0
     const atendimentos = atendDia[vendedorId] ? Number(atendDia[vendedorId]) : 0
 
-    const hoje = new Date().toISOString().slice(0, 10)
-
     const { error } = await supabase
       .from('vendas')
       .insert([
         {
           vendedor_id: vendedorId,
-          data: hoje,
+          data: dataLancamento,
           valor,
           atendimentos,
         },
@@ -171,6 +173,30 @@ export default function TabVendedores() {
         >
           Adicionar
         </button>
+      </div>
+
+      <div
+        className="info-box"
+        style={{
+          marginBottom: 20,
+          display: 'grid',
+          gap: 10,
+        }}
+      >
+        <div style={{ fontWeight: 700 }}>
+          Data dos lançamentos
+        </div>
+
+        <input
+          type="date"
+          value={dataLancamento}
+          onChange={(e) => setDataLancamento(e.target.value)}
+          style={{
+            padding: 12,
+            borderRadius: 10,
+            border: '1px solid #d1d5db',
+          }}
+        />
       </div>
 
       {erro && (
@@ -288,4 +314,4 @@ export default function TabVendedores() {
       </div>
     </div>
   )
-}
+  }
