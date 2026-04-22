@@ -54,6 +54,20 @@ function App() {
     carregar()
   }
 
+  async function remover(id) {
+    const { error } = await supabase
+      .from('vendedores')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      setErro(error.message)
+      return
+    }
+
+    carregar()
+  }
+
   return (
     <div style={{ padding: 20, fontFamily: 'Arial' }}>
       <h1>{msg}</h1>
@@ -77,7 +91,12 @@ function App() {
 
       <ul>
         {vendedores.map((v) => (
-          <li key={v.id}>{v.nome}</li>
+          <li key={v.id}>
+            {v.nome}{' '}
+            <button onClick={() => remover(v.id)}>
+              ❌
+            </button>
+          </li>
         ))}
       </ul>
     </div>
