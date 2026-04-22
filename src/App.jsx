@@ -25,8 +25,7 @@ function App() {
   useEffect(() => {
     async function carregar() {
       if (!supabase) {
-        setErro('Supabase não 
-                configurado')
+        setErro('Supabase não configurado')
         return
       }
 
