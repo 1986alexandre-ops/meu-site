@@ -2,6 +2,7 @@ import { useState } from 'react'
 import TabDashboard from './components/TabDashboard'
 import TabVendedores from './components/TabVendedores'
 import TabRanking from './components/TabRanking'
+import TabCalendario from './components/TabCalendario'
 
 function App() {
   const [aba, setAba] = useState('dashboard')
@@ -35,11 +36,19 @@ function App() {
           >
             🏆 Ranking
           </button>
+
+          <button
+            className={`tab-btn ${aba === 'calendario' ? 'active' : ''}`}
+            onClick={() => setAba('calendario')}
+          >
+            📅 Calendário
+          </button>
         </div>
 
         {aba === 'dashboard' && <TabDashboard />}
         {aba === 'vendedores' && <TabVendedores />}
         {aba === 'ranking' && <TabRanking />}
+        {aba === 'calendario' && <TabCalendario />}
       </div>
     </div>
   )
