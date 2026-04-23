@@ -8,18 +8,28 @@ const supabase = createClient(
 
 export default function TabCalendario() {
   const [vendedores, setVendedores] = useState([])
+  const [registros, setRegistros] = useState([])
   const [vendedorId, setVendedorId] = useState('')
   const [data, setData] = useState('')
   const [tipo, setTipo] = useState('FD')
   const [msg, setMsg] = useState('')
 
-  async function carregarVendedores() {
-    const { data } = await supabase.from('vendedores').select('*')
-    setVendedores(data || [])
+  async function carregarTudo() {
+    const { data: vends } = await supabase
+      .from('vendedores')
+      .select('*')
+
+    const { data: cal } = await supabase
+      .from('calendario_vendedor')
+      .select('*')
+      .order('data', { ascending: false })
+
+    setVendedores(vends || [])
+    setRegistros(cal || [])
   }
 
   useEffect(() => {
-    carregarVendedores()
+    carregarTudo()
   }, [])
 
   async function salvar() {
@@ -44,6 +54,12 @@ export default function TabCalendario() {
     }
 
     setMsg('Salvo com sucesso ✅')
+    carregarTudo()
+  }
+
+  function nomeVendedor(id) {
+    const v = vendedores.find((v) => v.id === id)
+    return v ? v.nome : 'Desconhecido'
   }
 
   return (
@@ -82,6 +98,29 @@ export default function TabCalendario() {
         </button>
 
         {msg && <div>{msg}</div>}
+      </div>
+
+      <div
+        className="info-box"
+        style={{ marginTop: 20, display: 'grid', gap: 10 }}
+      >
+        <strong>Registros lançados</strong>
+
+        {registros.map((r) => (
+          <div
+            key={r.id}
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              borderBottom: '1px solid #e5e7eb',
+              padding: '6px 0',
+            }}
+          >
+            <span>{nomeVendedor(r.vendedor_id)}</span>
+            <span>{r.data}</span>
+            <span>{r.status_dia}</span>
+          </div>
+        ))}
       </div>
     </div>
   )
