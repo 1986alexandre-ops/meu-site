@@ -43,7 +43,44 @@ export default function TabRanking() {
       return
     }
 
+    const { data: calendario, error: erroCalendario } = await supabase
+      .from('calendario_vendedor')
+      .select('*')
+
+    if (erroCalendario) {
+      setErro(erroCalendario.message)
+      return
+    }
+
+    const { data: configuracoes, error: erroConfig } = await supabase
+      .from('configuracao_mes')
+      .select('*')
+
+    if (erroConfig) {
+      setErro(erroConfig.message)
+      return
+    }
+
     const mesRef = dataSelecionada.slice(0, 7)
+
+    const configMes = (configuracoes || []).find((c) => c.mes_ref === mesRef)
+
+    const diasUteisMes = Number(configMes?.dias_uteis_mes || 0)
+    const dataReferencia = configMes?.data_referencia || dataSelecionada
+
+    function contarFolgas(vendedorId, soAteReferencia = false) {
+      return (calendario || []).filter((item) => {
+        const mesmoVendedor = item.vendedor_id === vendedorId
+        const mesmoMes = String(item.data || '').slice(0, 7) === mesRef
+        const ehFolga = item.status_dia === 'FD' || item.status_dia === 'FE'
+
+        if (!mesmoVendedor || !mesmoMes || !ehFolga) return false
+
+        if (!soAteReferencia) return true
+
+        return String(item.data) <= String(dataReferencia)
+      }).length
+    }
 
     const listaDia = (vendedores || []).map((v) => {
       const vendasDoVendedor = (vendas || []).filter(
@@ -95,7 +132,8 @@ export default function TabRanking() {
       const vendasDoVendedor = (vendas || []).filter(
         (item) =>
           item.vendedor_id === v.id &&
-          String(item.data || '').slice(0, 7) === mesRef
+          String(item.data || '').slice(0, 7) === mesRef &&
+          String(item.data) <= String(dataReferencia)
       )
 
       const totalVendido = vendasDoVendedor.reduce(
@@ -128,6 +166,22 @@ export default function TabRanking() {
           ? (totalVendido / Number(v.meta_mensal)) * 100
           : 0
 
+      const folgasAteReferencia = contarFolgas(v.id, true)
+      const folgasNoMes = contarFolgas(v.id, false)
+
+      const diasTrabalhadosDecorridos = Math.max(
+        1,
+        new Date(dataReferencia).getDate() - folgasAteReferencia
+      )
+
+      const diasTrabalhaveisMes = Math.max(
+        1,
+        diasUteisMes - folgasNoMes
+      )
+
+      const mediaPorDia = totalVendido / diasTrabalhadosDecorridos
+      const projecaoMes = mediaPorDia * diasTrabalhaveisMes
+
       return {
         ...v,
         totalVendido,
@@ -136,6 +190,9 @@ export default function TabRanking() {
         totalDesconto,
         totalFrete,
         percentualMeta,
+        diasTrabalhadosDecorridos,
+        diasTrabalhaveisMes,
+        projecaoMes,
       }
     })
 
@@ -203,7 +260,16 @@ export default function TabRanking() {
     return 'Crítico'
   }
 
-  function renderLista(titulo, lista, campo, tipo = 'money', mostrarPercentual = false) {
+  function getStatusProjecao(projecao, meta) {
+    if (!meta) return 'Sem meta'
+    const percentual = (projecao / meta) * 100
+
+    if (percentual >= 100) return '🔥 Vai bater meta'
+    if (percentual >= 80) return '⚠️ Risco'
+    return '❌ Fora do ritmo'
+  }
+
+  function renderLista(titulo, lista, campo, tipo = 'money', mostrarPercentual = false, mostrarProjecao = false) {
     return (
       <div className="info-box" style={{ display: 'grid', gap: 12 }}>
         <h3 style={{ margin: 0 }}>{titulo}</h3>
@@ -243,6 +309,13 @@ export default function TabRanking() {
                   <span>{v.percentualMeta.toFixed(1)}%</span>
                   <span>•</span>
                   <span>{getStatus(v.percentualMeta)}</span>
+                </div>
+              )}
+
+              {mostrarProjecao && (
+                <div style={{ marginTop: 6, fontSize: 13, color: '#374151' }}>
+                  <div>Projeção: {formatMoney(v.projecaoMes)}</div>
+                  <div>{getStatusProjecao(v.projecaoMes, v.meta_mensal)}</div>
                 </div>
               )}
             </div>
@@ -303,7 +376,7 @@ export default function TabRanking() {
 
       <div style={{ display: 'grid', gap: 16 }}>
         {renderLista('🏆 Ranking de vendas do dia', rankingDia, 'totalVendido', 'money', true)}
-        {renderLista('📅 Ranking de vendas do mês', rankingMes, 'totalVendido', 'money', true)}
+        {renderLista('📅 Ranking de vendas do mês', rankingMes, 'totalVendido', 'money', true, true)}
 
         {renderLista('📞 Ranking de atendimentos do dia', rankingAtendDia, 'totalAtendimentos', 'number')}
         {renderLista('🗓️ Ranking de atendimentos do mês', rankingAtendMes, 'totalAtendimentos', 'number')}
@@ -319,4 +392,4 @@ export default function TabRanking() {
       </div>
     </div>
   )
-}
+                                                       }
