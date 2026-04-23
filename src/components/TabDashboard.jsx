@@ -22,6 +22,10 @@ export default function TabDashboard() {
     new Date().toISOString().slice(0, 10)
   )
 
+  const [diasUteisMes, setDiasUteisMes] = useState('')
+  const [diasUteisDecorridos, setDiasUteisDecorridos] = useState('')
+  const [msg, setMsg] = useState('')
+
   async function carregar() {
     const mesRef = dataRef.slice(0, 7)
 
@@ -39,9 +43,12 @@ export default function TabDashboard() {
 
     const conf = (config || []).find((c) => c.mes_ref === mesRef)
 
-    const diasUteisMes = Number(conf?.dias_uteis_mes || 0)
-    const diasUteisDecorridos = Number(conf?.dias_uteis_decorridos || 0)
+    const diasMes = Number(conf?.dias_uteis_mes || 0)
+    const diasDecorridos = Number(conf?.dias_uteis_decorridos || 0)
     const dataReferencia = conf?.data_referencia || dataRef
+
+    setDiasUteisMes(conf?.dias_uteis_mes ?? '')
+    setDiasUteisDecorridos(conf?.dias_uteis_decorridos ?? '')
 
     const metaTotal = (vendedores || []).reduce(
       (soma, v) => soma + Number(v.meta_mensal || 0),
@@ -68,8 +75,8 @@ export default function TabDashboard() {
       totalAtendimentos > 0 ? realizado / totalAtendimentos : 0
 
     const projecao =
-      diasUteisDecorridos > 0
-        ? (realizado / diasUteisDecorridos) * diasUteisMes
+      diasDecorridos > 0
+        ? (realizado / diasDecorridos) * diasMes
         : 0
 
     const falta = Math.max(0, metaTotal - realizado)
@@ -92,6 +99,32 @@ export default function TabDashboard() {
       status,
       ticketMedio,
     })
+  }
+
+  async function salvarConfiguracao() {
+    const mesRef = dataRef.slice(0, 7)
+
+    const { error } = await supabase
+      .from('configuracao_mes')
+      .upsert(
+        {
+          mes_ref: mesRef,
+          dias_uteis_mes: diasUteisMes ? Number(diasUteisMes) : null,
+          dias_uteis_decorridos: diasUteisDecorridos
+            ? Number(diasUteisDecorridos)
+            : null,
+          data_referencia: dataRef,
+        },
+        { onConflict: 'mes_ref' }
+      )
+
+    if (error) {
+      setMsg(error.message)
+      return
+    }
+
+    setMsg('Configuração salva com sucesso ✅')
+    carregar()
   }
 
   useEffect(() => {
@@ -123,10 +156,8 @@ export default function TabDashboard() {
     <div>
       <h2 className="section-title">Dashboard</h2>
 
-      <div className="info-box" style={{ marginBottom: 20 }}>
-        <div style={{ fontWeight: 700, marginBottom: 10 }}>
-          Data de referência
-        </div>
+      <div className="info-box" style={{ marginBottom: 20, display: 'grid', gap: 10 }}>
+        <div style={{ fontWeight: 700 }}>Configuração do mês</div>
 
         <input
           type="date"
@@ -138,6 +169,36 @@ export default function TabDashboard() {
             border: '1px solid #d1d5db',
           }}
         />
+
+        <input
+          type="number"
+          placeholder="Dias úteis do mês"
+          value={diasUteisMes}
+          onChange={(e) => setDiasUteisMes(e.target.value)}
+          style={{
+            padding: 12,
+            borderRadius: 10,
+            border: '1px solid #d1d5db',
+          }}
+        />
+
+        <input
+          type="number"
+          placeholder="Dias úteis já passados"
+          value={diasUteisDecorridos}
+          onChange={(e) => setDiasUteisDecorridos(e.target.value)}
+          style={{
+            padding: 12,
+            borderRadius: 10,
+            border: '1px solid #d1d5db',
+          }}
+        />
+
+        <button onClick={salvarConfiguracao} className="tab-btn active">
+          Salvar configuração
+        </button>
+
+        {msg && <div>{msg}</div>}
       </div>
 
       <div
@@ -184,13 +245,7 @@ export default function TabDashboard() {
         </div>
       </div>
 
-      <div
-        className="info-box"
-        style={{
-          display: 'grid',
-          gap: 12,
-        }}
-      >
+      <div className="info-box" style={{ display: 'grid', gap: 12 }}>
         <div style={{ fontWeight: 700 }}>Status geral da loja</div>
 
         <div
@@ -215,4 +270,4 @@ export default function TabDashboard() {
       </div>
     </div>
   )
-      }
+}
