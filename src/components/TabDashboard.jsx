@@ -14,6 +14,7 @@ export default function TabDashboard() {
     projecao: 0,
     percentual: 0,
     status: 'Sem dados',
+    ticketMedio: 0,
   })
 
   const [dataRef, setDataRef] = useState(
@@ -56,6 +57,14 @@ export default function TabDashboard() {
       0
     )
 
+    const totalAtendimentos = vendasMes.reduce(
+      (soma, v) => soma + Number(v.atendimentos || 0),
+      0
+    )
+
+    const ticketMedio =
+      totalAtendimentos > 0 ? realizado / totalAtendimentos : 0
+
     const diaAtual = new Date(dataReferencia).getDate()
     const media = diaAtual > 0 ? realizado / diaAtual : 0
     const projecao = media * diasUteis
@@ -74,6 +83,7 @@ export default function TabDashboard() {
       projecao,
       percentual,
       status,
+      ticketMedio,
     })
   }
 
@@ -156,6 +166,13 @@ export default function TabDashboard() {
           <div style={{ fontSize: 14, color: '#6b7280' }}>Projeção do mês</div>
           <div style={{ fontSize: 24, fontWeight: 800 }}>
             {money(resumo.projecao)}
+          </div>
+        </div>
+
+        <div className="info-box">
+          <div style={{ fontSize: 14, color: '#6b7280' }}>Ticket médio</div>
+          <div style={{ fontSize: 24, fontWeight: 800 }}>
+            {money(resumo.ticketMedio)}
           </div>
         </div>
       </div>
