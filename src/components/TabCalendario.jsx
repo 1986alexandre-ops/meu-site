@@ -38,6 +38,15 @@ export default function TabCalendario() {
       return
     }
 
+    const jaExiste = registros.some(
+      (r) => r.vendedor_id === vendedorId && r.data === data
+    )
+
+    if (jaExiste) {
+      setMsg('Já existe lançamento para esse vendedor nessa data')
+      return
+    }
+
     const { error } = await supabase
       .from('calendario_vendedor')
       .insert([
