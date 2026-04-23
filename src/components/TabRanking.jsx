@@ -185,8 +185,22 @@ export default function TabRanking() {
   function getCorPercentual(valor) {
     if (valor >= 100) return '#166534'
     if (valor >= 80) return '#a16207'
-    if (valor >= 50) return '#b45309'
+    if (valor >= 50) return '#c2410c'
     return '#991b1b'
+  }
+
+  function getBgPercentual(valor) {
+    if (valor >= 100) return '#dcfce7'
+    if (valor >= 80) return '#fef3c7'
+    if (valor >= 50) return '#ffedd5'
+    return '#fee2e2'
+  }
+
+  function getStatus(valor) {
+    if (valor >= 100) return 'Bateu meta'
+    if (valor >= 80) return 'Ritmo bom'
+    if (valor >= 50) return 'Atenção'
+    return 'Crítico'
   }
 
   function renderLista(titulo, lista, campo, tipo = 'money', mostrarPercentual = false) {
@@ -214,13 +228,21 @@ export default function TabRanking() {
               {mostrarPercentual && (
                 <div
                   style={{
+                    marginTop: 6,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    background: getBgPercentual(v.percentualMeta),
                     color: getCorPercentual(v.percentualMeta),
-                    fontSize: 14,
+                    padding: '6px 10px',
+                    borderRadius: 999,
+                    fontSize: 13,
                     fontWeight: 700,
-                    marginTop: 4,
                   }}
                 >
-                  {v.percentualMeta.toFixed(1)}% da meta
+                  <span>{v.percentualMeta.toFixed(1)}%</span>
+                  <span>•</span>
+                  <span>{getStatus(v.percentualMeta)}</span>
                 </div>
               )}
             </div>
