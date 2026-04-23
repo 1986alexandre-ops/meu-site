@@ -13,6 +13,7 @@ export default function TabDashboard() {
     falta: 0,
     projecao: 0,
     percentual: 0,
+    percentualProjecao: 0,
     status: 'Sem dados',
     ticketMedio: 0,
   })
@@ -38,8 +39,9 @@ export default function TabDashboard() {
 
     const conf = (config || []).find((c) => c.mes_ref === mesRef)
 
+    const diasUteisMes = Number(conf?.dias_uteis_mes || 0)
+    const diasUteisDecorridos = Number(conf?.dias_uteis_decorridos || 0)
     const dataReferencia = conf?.data_referencia || dataRef
-    const diasUteis = Number(conf?.dias_uteis_mes || 0)
 
     const metaTotal = (vendedores || []).reduce(
       (soma, v) => soma + Number(v.meta_mensal || 0),
@@ -65,16 +67,20 @@ export default function TabDashboard() {
     const ticketMedio =
       totalAtendimentos > 0 ? realizado / totalAtendimentos : 0
 
-    const diaAtual = new Date(dataReferencia).getDate()
-    const media = diaAtual > 0 ? realizado / diaAtual : 0
-    const projecao = media * diasUteis
+    const projecao =
+      diasUteisDecorridos > 0
+        ? (realizado / diasUteisDecorridos) * diasUteisMes
+        : 0
+
     const falta = Math.max(0, metaTotal - realizado)
     const percentual = metaTotal > 0 ? (realizado / metaTotal) * 100 : 0
+    const percentualProjecao =
+      metaTotal > 0 ? (projecao / metaTotal) * 100 : 0
 
     let status = 'Crítico'
-    if (percentual >= 100) status = 'Meta batida'
-    else if (percentual >= 80) status = 'Ritmo bom'
-    else if (percentual >= 50) status = 'Atenção'
+    if (percentualProjecao >= 100) status = 'Meta provável'
+    else if (percentualProjecao >= 80) status = 'Ritmo bom'
+    else if (percentualProjecao >= 50) status = 'Atenção'
 
     setResumo({
       meta: metaTotal,
@@ -82,6 +88,7 @@ export default function TabDashboard() {
       falta,
       projecao,
       percentual,
+      percentualProjecao,
       status,
       ticketMedio,
     })
@@ -99,14 +106,14 @@ export default function TabDashboard() {
   }
 
   function getStatusColor(status) {
-    if (status === 'Meta batida') return '#166534'
+    if (status === 'Meta provável') return '#166534'
     if (status === 'Ritmo bom') return '#a16207'
     if (status === 'Atenção') return '#c2410c'
     return '#991b1b'
   }
 
   function getStatusBg(status) {
-    if (status === 'Meta batida') return '#dcfce7'
+    if (status === 'Meta provável') return '#dcfce7'
     if (status === 'Ritmo bom') return '#fef3c7'
     if (status === 'Atenção') return '#ffedd5'
     return '#fee2e2'
@@ -199,11 +206,13 @@ export default function TabDashboard() {
             fontWeight: 700,
           }}
         >
-          <span>{resumo.percentual.toFixed(1)}%</span>
+          <span>{resumo.percentual.toFixed(1)}% realizado</span>
+          <span>•</span>
+          <span>{resumo.percentualProjecao.toFixed(1)}% projeção</span>
           <span>•</span>
           <span>{resumo.status}</span>
         </div>
       </div>
     </div>
   )
-}
+      }
