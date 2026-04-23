@@ -11,9 +11,12 @@ export default function TabRanking() {
   const [rankingMes, setRankingMes] = useState([])
   const [rankingAtendDia, setRankingAtendDia] = useState([])
   const [rankingAtendMes, setRankingAtendMes] = useState([])
-  const [rankingMargem, setRankingMargem] = useState([])
-  const [rankingDesconto, setRankingDesconto] = useState([])
-  const [rankingFrete, setRankingFrete] = useState([])
+  const [rankingMargemDia, setRankingMargemDia] = useState([])
+  const [rankingMargemMes, setRankingMargemMes] = useState([])
+  const [rankingDescontoDia, setRankingDescontoDia] = useState([])
+  const [rankingDescontoMes, setRankingDescontoMes] = useState([])
+  const [rankingFreteDia, setRankingFreteDia] = useState([])
+  const [rankingFreteMes, setRankingFreteMes] = useState([])
   const [erro, setErro] = useState('')
   const [dataSelecionada, setDataSelecionada] = useState(
     new Date().toISOString().slice(0, 10)
@@ -57,6 +60,21 @@ export default function TabRanking() {
         0
       )
 
+      const totalMargem = vendasDoVendedor.reduce(
+        (soma, item) => soma + Number(item.margem || 0),
+        0
+      )
+
+      const totalDesconto = vendasDoVendedor.reduce(
+        (soma, item) => soma + Number(item.desconto || 0),
+        0
+      )
+
+      const totalFrete = vendasDoVendedor.reduce(
+        (soma, item) => soma + Number(item.frete || 0),
+        0
+      )
+
       const percentualMeta =
         Number(v.meta_diaria || 0) > 0
           ? (totalVendido / Number(v.meta_diaria)) * 100
@@ -66,6 +84,9 @@ export default function TabRanking() {
         ...v,
         totalVendido,
         totalAtendimentos,
+        totalMargem,
+        totalDesconto,
+        totalFrete,
         percentualMeta,
       }
     })
@@ -87,11 +108,6 @@ export default function TabRanking() {
         0
       )
 
-      const percentualMeta =
-        Number(v.meta_mensal || 0) > 0
-          ? (totalVendido / Number(v.meta_mensal)) * 100
-          : 0
-
       const totalMargem = vendasDoVendedor.reduce(
         (soma, item) => soma + Number(item.margem || 0),
         0
@@ -107,42 +123,50 @@ export default function TabRanking() {
         0
       )
 
+      const percentualMeta =
+        Number(v.meta_mensal || 0) > 0
+          ? (totalVendido / Number(v.meta_mensal)) * 100
+          : 0
+
       return {
         ...v,
         totalVendido,
         totalAtendimentos,
-        percentualMeta,
         totalMargem,
         totalDesconto,
         totalFrete,
+        percentualMeta,
       }
     })
 
-    setRankingDia(
-      [...listaDia].sort((a, b) => b.totalVendido - a.totalVendido)
-    )
-
-    setRankingMes(
-      [...listaMes].sort((a, b) => b.totalVendido - a.totalVendido)
-    )
+    setRankingDia([...listaDia].sort((a, b) => b.totalVendido - a.totalVendido))
+    setRankingMes([...listaMes].sort((a, b) => b.totalVendido - a.totalVendido))
 
     setRankingAtendDia(
       [...listaDia].sort((a, b) => b.totalAtendimentos - a.totalAtendimentos)
     )
-
     setRankingAtendMes(
       [...listaMes].sort((a, b) => b.totalAtendimentos - a.totalAtendimentos)
     )
 
-    setRankingMargem(
+    setRankingMargemDia(
+      [...listaDia].sort((a, b) => b.totalMargem - a.totalMargem)
+    )
+    setRankingMargemMes(
       [...listaMes].sort((a, b) => b.totalMargem - a.totalMargem)
     )
 
-    setRankingDesconto(
+    setRankingDescontoDia(
+      [...listaDia].sort((a, b) => a.totalDesconto - b.totalDesconto)
+    )
+    setRankingDescontoMes(
       [...listaMes].sort((a, b) => a.totalDesconto - b.totalDesconto)
     )
 
-    setRankingFrete(
+    setRankingFreteDia(
+      [...listaDia].sort((a, b) => b.totalFrete - a.totalFrete)
+    )
+    setRankingFreteMes(
       [...listaMes].sort((a, b) => b.totalFrete - a.totalFrete)
     )
   }
@@ -256,54 +280,21 @@ export default function TabRanking() {
       )}
 
       <div style={{ display: 'grid', gap: 16 }}>
-        {renderLista(
-          '🏆 Ranking de vendas do dia',
-          rankingDia,
-          'totalVendido',
-          'money',
-          true
-        )}
+        {renderLista('🏆 Ranking de vendas do dia', rankingDia, 'totalVendido', 'money', true)}
+        {renderLista('📅 Ranking de vendas do mês', rankingMes, 'totalVendido', 'money', true)}
 
-        {renderLista(
-          '📅 Ranking de vendas do mês',
-          rankingMes,
-          'totalVendido',
-          'money',
-          true
-        )}
+        {renderLista('📞 Ranking de atendimentos do dia', rankingAtendDia, 'totalAtendimentos', 'number')}
+        {renderLista('🗓️ Ranking de atendimentos do mês', rankingAtendMes, 'totalAtendimentos', 'number')}
 
-        {renderLista(
-          '📞 Ranking de atendimentos do dia',
-          rankingAtendDia,
-          'totalAtendimentos',
-          'number'
-        )}
+        {renderLista('💰 Melhor margem do dia', rankingMargemDia, 'totalMargem')}
+        {renderLista('💰 Melhor margem do mês', rankingMargemMes, 'totalMargem')}
 
-        {renderLista(
-          '🗓️ Ranking de atendimentos do mês',
-          rankingAtendMes,
-          'totalAtendimentos',
-          'number'
-        )}
+        {renderLista('🎯 Menor desconto do dia', rankingDescontoDia, 'totalDesconto')}
+        {renderLista('🎯 Menor desconto do mês', rankingDescontoMes, 'totalDesconto')}
 
-        {renderLista(
-          '💰 Melhor margem',
-          rankingMargem,
-          'totalMargem'
-        )}
-
-        {renderLista(
-          '🎯 Menor desconto',
-          rankingDesconto,
-          'totalDesconto'
-        )}
-
-        {renderLista(
-          '🚚 Frete',
-          rankingFrete,
-          'totalFrete'
-        )}
+        {renderLista('🚚 Frete do dia', rankingFreteDia, 'totalFrete')}
+        {renderLista('🚚 Frete do mês', rankingFreteMes, 'totalFrete')}
       </div>
     </div>
   )
-        }
+}
