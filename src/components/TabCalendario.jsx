@@ -116,14 +116,53 @@ export default function TabCalendario() {
         <strong>Registros lançados</strong>
 
         {registros.map((r) => (
-          <div
-            key={r.id}
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              borderBottom: '1px solid #e5e7eb',
-              padding: '6px 0',
-            }}
+  <div
+    key={r.id}
+    style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      borderBottom: '1px solid #e5e7eb',
+      padding: '6px 0',
+      gap: 10,
+    }}
+  >
+    <span>{nomeVendedor(r.vendedor_id)}</span>
+    <span>{r.data}</span>
+    <span>{r.status_dia}</span>
+
+    <button
+      onClick={async () => {
+        const confirmar = confirm('Deseja excluir esse lançamento?')
+
+        if (!confirmar) return
+
+        const { error } = await supabase
+          .from('calendario_vendedor')
+          .delete()
+          .eq('id', r.id)
+
+        if (error) {
+          setMsg(error.message)
+          return
+        }
+
+        setMsg('Removido com sucesso 🗑️')
+        carregarTudo()
+      }}
+      style={{
+        border: 'none',
+        background: '#fee2e2',
+        color: '#991b1b',
+        padding: '6px 10px',
+        borderRadius: 8,
+        fontWeight: 700,
+      }}
+    >
+      Excluir
+    </button>
+  </div>
+))}
           >
             <span>{nomeVendedor(r.vendedor_id)}</span>
             <span>{r.data}</span>
